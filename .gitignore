@@ -39,6 +39,7 @@ build/Release
 
 # Dependency directories
 node_modules/
+node_modules.package-map-backup/
 jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)
@@ -46,6 +47,8 @@ web_modules/
 
 # TypeScript cache
 *.tsbuildinfo
+vite.config.js
+vite.config.d.ts
 
 # Optional npm cache directory
 .npm

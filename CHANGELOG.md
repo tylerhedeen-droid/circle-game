@@ -2,6 +2,20 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.4.0] - 2026-08-13
+
+### Added
+
+- Expected player counts (2–10), authoritative capacity enforcement, and host-confirmed count reduction.
+- Immediately open asynchronous Round 1 play and automatic Round 2/3/4+ preparation.
+- Full-roster-and-full-submission server completion rule, dynamic current-round eligibility, and asynchronous Active Game status.
+- Additive Supabase migration `004_async_expected_players.sql` with safe legacy-room backfill.
+
+### Changed
+
+- Removed normal host Start Round gates; players can submit whenever their authoritative current round is ready.
+- Participant rows now track all active players who join while the current round remains open.
+
 ## [1.3.0] - 2026-08-13
 
 ### Added

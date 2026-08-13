@@ -1,5 +1,7 @@
 # Circle
 
+See [CHANGELOG.md](CHANGELOG.md) for version history and notable updates.
+
 A mobile-first party game: draw one freehand circle, get a believable roundness score, and compete with friends in a live private room. Solo Practice works without a backend; multiplayer uses Supabase Realtime.
 
 ## What is included

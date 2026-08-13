@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './styles.css'
 import './enhancements.css'
+import './room-home.css'
 let applyServiceWorkerUpdate: (reloadPage?: boolean) => Promise<void>
 applyServiceWorkerUpdate = registerSW({
   immediate: true,

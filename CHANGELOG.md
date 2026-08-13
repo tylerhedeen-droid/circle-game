@@ -2,6 +2,17 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.2.2] - 2026-08-13
+
+### Fixed
+
+- New multiplayer rooms remain in the lobby until the host explicitly starts a round.
+- Competitive rounds require at least two active players; one-player lobbies show a clear waiting message.
+- Start Round enables automatically after another player joins through Realtime.
+- Persistent Home navigation now exits every room view without leaving, closing, or removing the game.
+- The Game tab continues to reflect the authoritative lobby, draw, waiting, or results lifecycle rather than forcing a drawing canvas.
+- Shared links continue to join or restore the lobby without starting a round.
+
 ## [1.2.1] - 2026-08-13
 
 ### Fixed

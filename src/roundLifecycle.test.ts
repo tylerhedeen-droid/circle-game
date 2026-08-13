@@ -1,5 +1,5 @@
 import{describe,expect,it}from'vitest'
-import{completeIfReady,removeParticipant,restoreRoundScreen,startRound,submitAttempt}from'./roundLifecycle'
+import{completeIfReady,removeParticipant,resolveMultiplayerState,startRound,submitAttempt}from'./roundLifecycle'
 describe('multiplayer round lifecycle',()=>{
   it('completes a 2-player round only after player B submits',()=>{const s=startRound(['a','b']);submitAttempt(s,'a');expect(s.status).toBe('drawing');submitAttempt(s,'b');expect(s.status).toBe('results')})
   it('keeps 3 players waiting for the third submission',()=>{const s=startRound(['a','b','c']);submitAttempt(s,'a');submitAttempt(s,'b');expect(s.status).toBe('drawing');submitAttempt(s,'c');expect(s.status).toBe('results')})
@@ -11,7 +11,14 @@ describe('multiplayer round lifecycle',()=>{
   it('inactive player removal allows completion',()=>{const s=startRound(['a','stale']);submitAttempt(s,'a');removeParticipant(s,'stale');expect(s.status).toBe('results')})
   it('late joiners do not enter the current snapshot',()=>{const s=startRound(['a','b']);submitAttempt(s,'late');submitAttempt(s,'a');submitAttempt(s,'b');expect(s.status).toBe('results');expect(s.participants.has('late')).toBe(false)})
   it('next round resets submissions and snapshots active players',()=>{const first=startRound(['a','b']);submitAttempt(first,'a');submitAttempt(first,'b');const next=startRound(['a','c']);expect(next.status).toBe('drawing');expect(next.submitted.size).toBe(0);expect([...next.participants]).toEqual(['a','c'])})
-  it('rejoin after submitting restores waiting without allowing another draw',()=>expect(restoreRoundScreen('drawing',true,true)).toBe('lobby'))
-  it('rejoin during results restores the results screen',()=>expect(restoreRoundScreen('results',true,true)).toBe('result'))
-  it('an original unsubmitted participant rejoins the drawing screen',()=>expect(restoreRoundScreen('drawing',true,false)).toBe('draw'))
+  const resolve=(status:'lobby'|'drawing'|'results'|'closed',included:boolean,submitted:boolean,round=1)=>resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status,current_round:round},playerId:'a',participant:included?{player_id:'a',round_number:round,is_active:true}:null,attempt:submitted?{player_id:'a',round_number:round}:null})
+  it('rejoin after submitting restores waiting without allowing another draw',()=>expect(resolve('drawing',true,true)).toBe('submitted_waiting'))
+  it('rejoin during results restores the results screen',()=>expect(resolve('results',true,true)).toBe('results'))
+  it('an original unsubmitted participant rejoins the drawing screen',()=>expect(resolve('drawing',true,false)).toBe('draw'))
+  it('late joiner waits for next round',()=>expect(resolve('drawing',false,false)).toBe('waiting_next_round'))
+  it('closed room resolves ended',()=>expect(resolve('closed',true,true)).toBe('closed'))
+  it('a prior-round attempt never suppresses the new round drawing screen',()=>expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:2},playerId:'a',participant:{player_id:'a',round_number:2,is_active:true},attempt:{player_id:'a',round_number:1}})).toBe('draw'))
+  it.each(['navigate back','Game tab','refresh','Active Games','manual reopen'])('keeps a Round 1 submitter waiting after %s',()=>expect(resolve('drawing',true,true,1)).toBe('submitted_waiting'))
+  it('never renders draw from Results to Game navigation',()=>expect(resolve('results',true,true)).toBe('results'))
+  it('allows a fresh draw only after authoritative Round 2 snapshot',()=>expect(resolve('drawing',true,false,2)).toBe('draw'))
 })

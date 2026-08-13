@@ -12,4 +12,8 @@ describe('persistent room results',()=>{
   it('never leaks all-submitted scores while drawing',()=>expect(mayRevealCurrent({status:'drawing',reveal_mode:'all_submitted'})).toBe(false))
   it('reveals immediate scores while drawing',()=>expect(mayRevealCurrent({status:'drawing',reveal_mode:'immediate'})).toBe(true))
   it('keeps session stats correct across rounds',()=>{const rows=sessionRows(attempts,players);expect(rows.map(r=>({name:r.player.display_name,wins:r.wins,played:r.played,best:r.best}))).toEqual([{name:'Mike',wins:1,played:2,best:90},{name:'Tyler',wins:1,played:2,best:92}])})
+  it('never invents a zero score for a participant with no attempt',()=>{const rows=sessionRows([],players);expect(rows.every(r=>r.played===0)).toBe(true);expect(rankedRound([],players,1)).toEqual([])})
+  it('omits a late nonparticipant with no attempt from round standings',()=>expect(rankedRound([attempt('1','a',1,88)],players,1).map(r=>r.playerName)).toEqual(['Tyler']))
+  it('displays the exact persisted score, including a real zero',()=>expect(rankedRound([attempt('z','a',1,0)],players,1)[0].score).toBe(0))
+  it('averages only persisted attempts',()=>expect(sessionRows([attempt('1','a',1,88)],players).find(r=>r.player.id==='a')?.average).toBe(88))
 })

@@ -2,6 +2,21 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.2.1] - 2026-08-13
+
+### Fixed
+
+- Shared game URLs now contain the room code and restore an existing device identity directly.
+- One authoritative lifecycle resolver now controls shared links, Active Games, refresh, Realtime, tabs, rejoin, and submission reconciliation.
+- A persisted current-round attempt always resolves to submitted/waiting and can never reopen the drawing canvas.
+- Submission waits for the persisted attempt row before completing and re-resolving the room.
+- Missing attempts and nonparticipants no longer appear as false `0.0` scores in standings or session statistics.
+- Current-round identity always comes from the freshly fetched room, participant, and attempt rows.
+
+### Added
+
+- Development-only lifecycle diagnostics containing room, round, participant, attempt, and resolved-state information.
+
 ## [1.2.0] - 2026-08-13
 
 ### Added

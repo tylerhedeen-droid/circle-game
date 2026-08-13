@@ -10,9 +10,22 @@ export function completeIfReady(state:RoundState){
   return state
 }
 export function removeParticipant(state:RoundState,playerId:string){state.participants.delete(playerId);return completeIfReady(state)}
-export function restoreRoundScreen(status:'lobby'|'drawing'|'results'|'closed',included:boolean,submitted:boolean){
-  if(status==='results')return 'result'
-  if(status==='closed')return 'ended'
-  if(status==='drawing'&&included&&!submitted)return 'draw'
-  return 'lobby'
+export type MultiplayerLifecycle='loading'|'lobby'|'draw'|'submitted_waiting'|'waiting_next_round'|'results'|'closed'
+export type MultiplayerResolutionInput={
+  room:{id:string;room_code:string;status:'lobby'|'drawing'|'results'|'closed';current_round:number}|null
+  playerId:string|null
+  participant:{player_id:string;round_number:number;is_active:boolean}|null
+  attempt:{player_id:string;round_number:number}|null
+}
+/** The single authoritative multiplayer resolver. Callers must supply rows fetched
+ * for room.current_round; transient navigation/localStorage is intentionally absent. */
+export function resolveMultiplayerState({room,playerId,participant,attempt}:MultiplayerResolutionInput):MultiplayerLifecycle{
+  if(!room||!playerId)return'loading'
+  if(room.status==='closed')return'closed'
+  if(room.status==='lobby')return'lobby'
+  if(room.status==='results')return'results'
+  const included=participant?.player_id===playerId&&participant.round_number===room.current_round&&participant.is_active
+  if(!included)return'waiting_next_round'
+  const submitted=attempt?.player_id===playerId&&attempt.round_number===room.current_round
+  return submitted?'submitted_waiting':'draw'
 }

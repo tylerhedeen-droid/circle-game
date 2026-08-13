@@ -2,6 +2,21 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.2.0] - 2026-08-13
+
+### Added
+
+- Persistent Game, Results, History, and Session room navigation.
+- Compact round history generated from existing attempt records, newest round first.
+- Dedicated final standings with rank, score, rating, winner, and current-player highlighting.
+
+### Fixed
+
+- Completed-round results remain accessible after internal navigation, refresh, PWA reopen, Active Games access, or rejoin.
+- All participating players can return to the complete leaderboard until the host starts the next round.
+- Starting a new round preserves prior results in history and cumulative session statistics.
+- Hidden reveal mode does not expose current-round scores before results.
+
 ## [1.1.1] - 2026-08-13
 
 ### Fixed

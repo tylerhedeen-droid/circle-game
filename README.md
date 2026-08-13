@@ -18,7 +18,7 @@ A mobile-first party game: draw one freehand circle, get a believable roundness 
 ## Supabase setup
 
 1. Create a Supabase project.
-2. Open **SQL Editor**, paste the complete contents of [`supabase/migrations/001_circle_game.sql`](supabase/migrations/001_circle_game.sql), and run it once.
+2. Open **SQL Editor** and run the migration files in numeric order. For a new project, run [`001_circle_game.sql`](supabase/migrations/001_circle_game.sql), then [`002_multiplayer_reliability.sql`](supabase/migrations/002_multiplayer_reliability.sql). Existing projects that already ran `001` only need to run `002`.
 3. In **Project Settings → API**, copy the Project URL and public anon/publishable key.
 4. Copy `.env.example` to `.env.local` and fill in:
 

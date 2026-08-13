@@ -2,6 +2,23 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.1.1] - 2026-08-13
+
+### Fixed
+
+- Round completion no longer depends on the host client or the mutable room player list.
+- Guests now transition automatically from submitted/waiting state to results through Realtime.
+- Per-round participant snapshots prevent late joiners and abandoned players from blocking a round.
+- Completion is server-side, race-safe, and idempotent for simultaneous submissions and duplicate events.
+- Leaving Active Games retains the device's server-side player identity so the same room can be rejoined.
+- Rejoining restores host status, submitted state, active drawing state, or current results as appropriate.
+
+### Added
+
+- Host control for removing an inactive participant; removal can immediately complete a waiting round.
+- Additive Supabase migration `002_multiplayer_reliability.sql`.
+- Automated multiplayer lifecycle coverage for two- and three-player rounds, ordering, races, refresh, removal, late joins, rejoin, and next-round reset.
+
 ## [1.1.0] - 2026-08-13
 
 ### Added

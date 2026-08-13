@@ -2,6 +2,18 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.3.0] - 2026-08-13
+
+### Added
+
+- Authoritative three-round multiplayer matches with automatic final results.
+- Overall winner ranking by round wins, average score, then best score, with exact ties preserved.
+- Final Results screen with match standings and compact individual-round history.
+- Confirmed End Game control for hosts after any completed round.
+- Keep Playing control that starts Round 4 and preserves all history in an extended game.
+- Persistent match status so guests, refreshed clients, and reopened Active Games agree on completion.
+- Additive Supabase migration `003_match_completion.sql`.
+
 ## [1.2.2] - 2026-08-13
 
 ### Fixed

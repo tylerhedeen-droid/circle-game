@@ -4,8 +4,9 @@ const shape=(fn:(t:number)=>[number,number],steps=180,turns=1)=>Array.from({leng
 const circle=()=>shape(t=>[110*Math.cos(t),110*Math.sin(t)])
 describe('roundness scoring',()=>{
   it('scores a perfect circle near 100',()=>expect(scoreStroke(circle()).score).toBeGreaterThan(96))
-  it('forgives a slightly imperfect circle',()=>expect(scoreStroke(shape(t=>[(110+4*Math.sin(5*t))*Math.cos(t),(110+4*Math.sin(5*t))*Math.sin(t)])).score).toBeGreaterThan(80))
-  it('penalizes an ellipse',()=>expect(scoreStroke(shape(t=>[125*Math.cos(t),70*Math.sin(t)])).score).toBeLessThan(85))
+  it('keeps a slightly imperfect circle in a good, non-elite range',()=>{const score=scoreStroke(shape(t=>[(110+7*Math.sin(5*t))*Math.cos(t),(110+7*Math.sin(5*t))*Math.sin(t)])).score;expect(score).toBeGreaterThan(70);expect(score).toBeLessThan(95)})
+  it('separates an ellipse meaningfully from a good circle',()=>{const ellipse=scoreStroke(shape(t=>[125*Math.cos(t),70*Math.sin(t)])).score;const good=scoreStroke(shape(t=>[(110+7*Math.sin(5*t))*Math.cos(t),(110+7*Math.sin(5*t))*Math.sin(t)])).score;expect(ellipse).toBeLessThan(75);expect(good-ellipse).toBeGreaterThan(10)})
+  it('reserves 95+ for nearly perfect shapes',()=>expect(scoreStroke(shape(t=>[(110+2*Math.sin(5*t))*Math.cos(t),(110+2*Math.sin(5*t))*Math.sin(t)])).score).toBeLessThan(95))
   it('penalizes a square-like shape',()=>{const p:Point[]=[];[[60,60],[300,60],[300,300],[60,300],[60,60]].forEach((a,j,arr)=>{if(!j)return;const b=arr[j-1];for(let i=0;i<40;i++)p.push({x:b[0]+(a[0]-b[0])*i/39,y:b[1]+(a[1]-b[1])*i/39})});expect(scoreStroke(p).score).toBeLessThan(80)})
   it('penalizes an open circle',()=>expect(scoreStroke(shape(t=>[110*Math.cos(t*.78),110*Math.sin(t*.78)])).score).toBeLessThan(70))
   it('rejects a line',()=>expect(scoreStroke(Array.from({length:100},(_,i)=>({x:20+i*3,y:100})))).toMatchObject({valid:false,score:0}))

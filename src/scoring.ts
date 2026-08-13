@@ -7,6 +7,13 @@ export type ScoreResult = {
 
 const clamp = (n: number, min = 0, max = 1) => Math.min(max, Math.max(min, n))
 const dist = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
+export const SCORING_CONFIG = {
+  weights: { radial: .55, closure: .15, smoothness: .15, coverage: .10, retracing: .05 },
+  radialErrorAtZero: .17,
+  closureRatioAtZero: .28,
+  roughnessAllowance: .20,
+  highEndExponent: 1.25,
+} as const
 const empty = (reason: string): ScoreResult => ({ valid: false, reason, score: 0, center: {x:0,y:0}, radius:0, radialStdDev:0, radialError:1, closureRatio:1, closureScore:0, smoothness:0, angularCoverage:0, coverageScore:0, retracePenalty:0, pathLength:0, normalizedPoints:[] })
 
 function resample(points: Point[], count = 160): Point[] {
@@ -51,17 +58,19 @@ export function scoreStroke(input: Point[]): ScoreResult {
   if(!fit||fit.radius<14)return empty('We could not find a circle in that stroke. Try a wider loop.')
   const radii=points.map(p=>dist(p,fit.center)),mean=radii.reduce((a,b)=>a+b,0)/radii.length
   const std=Math.sqrt(radii.reduce((s,r)=>s+(r-mean)**2,0)/radii.length), radialError=std/mean
-  const closureRatio=dist(points[0],points.at(-1)!)/(2*mean), closureScore=clamp(1-closureRatio/0.32)
+  const closureRatio=dist(points[0],points.at(-1)!)/(2*mean), closureScore=clamp(1-closureRatio/SCORING_CONFIG.closureRatioAtZero)
   const rawAngles=points.map(p=>Math.atan2(p.y-fit.center.y,p.x-fit.center.x));let travel=0,reverse=0
   for(let i=1;i<rawAngles.length;i++){let d=rawAngles[i]-rawAngles[i-1];while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;travel+=d;reverse+=Math.abs(d)}
   const revolutions=Math.abs(travel)/(2*Math.PI), angularCoverage=Math.min(1,revolutions), coverageScore=clamp((angularCoverage-.58)/.38)
   let rough=0
   for(let i=2;i<points.length;i++){const a1=Math.atan2(points[i-1].y-points[i-2].y,points[i-1].x-points[i-2].x),a2=Math.atan2(points[i].y-points[i-1].y,points[i].x-points[i-1].x);let d=Math.abs(a2-a1);if(d>Math.PI)d=2*Math.PI-d;rough+=Math.max(0,d-.14)}
-  const smoothness=clamp(1-rough/(points.length*.22))
-  const radialScore=clamp(1-radialError/.24)
+  const smoothness=clamp(1-rough/(points.length*SCORING_CONFIG.roughnessAllowance))
+  const radialScore=clamp(1-radialError/SCORING_CONFIG.radialErrorAtZero)
   const reverseRatio=Math.max(0,reverse-Math.abs(travel))/(2*Math.PI)
   const retracePenalty=clamp(Math.max(0,revolutions-1.12)/.65 + reverseRatio/.8)
-  let score=100*(.55*radialScore+.15*closureScore+.15*smoothness+.10*coverageScore+.05*(1-retracePenalty))
+  const weights=SCORING_CONFIG.weights
+  const base=weights.radial*radialScore+weights.closure*closureScore+weights.smoothness*smoothness+weights.coverage*coverageScore+weights.retracing*(1-retracePenalty)
+  let score=100*Math.pow(base,SCORING_CONFIG.highEndExponent)
   if(revolutions<.52)score*=.25;else if(revolutions<.85)score*=.75;if(revolutions>1.55)score*=.35;if(path/(2*Math.PI*mean)>2.1)score*=.55
   const valid=revolutions>=.38
   return {valid,reason:valid?undefined:'Finish the loop — your circle was too open.',score:valid?Math.round(clamp(score,0,100)*10)/10:0,center:fit.center,radius:mean,radialStdDev:std,radialError,closureRatio,closureScore,smoothness,angularCoverage,coverageScore,retracePenalty,pathLength:path,normalizedPoints:points}

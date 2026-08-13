@@ -1,14 +1,11 @@
 import{describe,expect,it}from'vitest'
-import{canStartCompetitiveRound,createdRoomState,homeNavigationPreservesRoom}from'./roomFlow'
-import{resolveMultiplayerState,startRound,submitAttempt}from'./roundLifecycle'
-describe('competitive room flow',()=>{
-  it('creates a real lobby with no participant snapshot',()=>expect(createdRoomState()).toEqual({status:'lobby',currentRound:0,participantIds:[]}))
-  it('keeps the host out of drawing before Start Round',()=>expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'lobby',current_round:0},playerId:'h',participant:null,attempt:null})).toBe('lobby'))
-  it('disables a one-player lobby',()=>expect(canStartCompetitiveRound({status:'lobby'},1,true)).toBe(false))
-  it('enables a two-player host lobby',()=>expect(canStartCompetitiveRound({status:'lobby'},2,true)).toBe(true))
-  it('starts Round 1 with both players drawing',()=>{const state=startRound(['h','g']);expect([...state.participants]).toEqual(['h','g']);for(const id of ['h','g'])expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:1},playerId:id,participant:{player_id:id,round_number:1,is_active:true},attempt:null})).toBe('draw')})
-  it.each(['lobby','drawing','results'])('Home from %s preserves the room/session',()=>expect(homeNavigationPreservesRoom()).toBe(true))
-  it('reopening after Home restores results',()=>expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'results',current_round:1},playerId:'h',participant:{player_id:'h',round_number:1,is_active:true},attempt:{player_id:'h',round_number:1}})).toBe('results'))
-  it('only the host can begin the next round after results',()=>{expect(canStartCompetitiveRound({status:'results'},2,false)).toBe(false);expect(canStartCompetitiveRound({status:'results'},2,true)).toBe(true)})
-  it('next round resets submissions while prior state remains intact',()=>{const first=startRound(['h','g']);submitAttempt(first,'h');submitAttempt(first,'g');const second=startRound(['h','g']);expect(first.status).toBe('results');expect(second.status).toBe('drawing');expect(second.submitted.size).toBe(0)})
+import{activeGameStatus,canChangeExpectedPlayerCount,homeNavigationPreservesRoom,validExpectedPlayerCount}from'./roomFlow'
+const room={status:'drawing' as const,current_round:1,expected_player_count:4,match_status:'active' as const,last_completed_round:0}
+describe('async room flow',()=>{
+ it.each([2,4,10])('accepts supported player count %s',n=>expect(validExpectedPlayerCount(n)).toBe(true))
+ it.each([1,11,2.5])('rejects invalid player count %s',n=>expect(validExpectedPlayerCount(n)).toBe(false))
+ it('allows decreases no lower than active roster',()=>{expect(canChangeExpectedPlayerCount(room,3,3,3,4)).toBe(true);expect(canChangeExpectedPlayerCount(room,3,3,2,4)).toBe(false)})
+ it('allows increases only before Round 1 submissions',()=>{expect(canChangeExpectedPlayerCount(room,2,0,5,4)).toBe(true);expect(canChangeExpectedPlayerCount(room,2,1,5,4)).toBe(false)})
+ it('formats multi-room attention states',()=>{expect(activeGameStatus(room,3,true)).toBe('Round 1 · 3/4 players · You submitted');expect(activeGameStatus(room,3,false)).toBe('Round 1 · Your turn');expect(activeGameStatus({...room,match_status:'finished'},4,true)).toBe('Game complete')})
+ it('preserves sessions on Home/PWA reopen',()=>expect(homeNavigationPreservesRoom()).toBe(true))
 })

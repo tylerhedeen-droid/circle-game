@@ -1,7 +1,10 @@
 import type { Attempt, Player, Room } from './supabase'
+import { scoreStroke } from './scoring'
 
 export type RankedAttempt=Attempt&{playerName:string;rank:number;winner:boolean}
 export type RoundHistory={roundNumber:number;results:RankedAttempt[]}
+export const completedResultsRound=(room:Pick<Room,'status'|'current_round'|'last_completed_round'>)=>room.last_completed_round||(room.status==='results'?room.current_round:0)
+export const circleResultPreview=(attempt:Attempt)=>({points:attempt.points,score:{...scoreStroke(attempt.points),score:attempt.score}})
 
 export function rankedRound(attempts:Attempt[],players:Player[],roundNumber:number):RankedAttempt[]{
   const names=new Map(players.map(p=>[p.id,p.display_name]))

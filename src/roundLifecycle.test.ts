@@ -1,5 +1,5 @@
 import{describe,expect,it}from'vitest'
-import{joinAsyncRound,openAsyncRound,reduceExpectedPlayers,removeAsyncPlayer,resolveMultiplayerState,submitAsyncAttempt}from'./roundLifecycle'
+import{isDrawableLifecycle,joinAsyncRound,openAsyncRound,reduceExpectedPlayers,removeAsyncPlayer,resolveMultiplayerState,submitAsyncAttempt}from'./roundLifecycle'
 
 describe('asynchronous expected-player lifecycle',()=>{
   it('keeps a 2-player game open when host submits before friend joins',()=>{const s=openAsyncRound(2,['host']);submitAsyncAttempt(s,'host');expect(s.status).toBe('drawing');joinAsyncRound(s,'friend');expect(s.status).toBe('drawing');submitAsyncAttempt(s,'friend');expect(s.status).toBe('results')})
@@ -20,4 +20,8 @@ describe('authoritative resolver',()=>{
  it('restores refresh/PWA/shared-link state from rows',()=>expect(resolve(true,2,1)).toBe('submitted_waiting_attempts'))
  it('announces an automatically prepared next round',()=>expect(resolve(false,2,0,2,1)).toBe('next_round_ready'))
  it('resolves final results authoritatively',()=>expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'results',current_round:3,expected_player_count:2,match_status:'finished'},playerId:'a',participant:null,attempt:null,activePlayerCount:2,submittedCount:2})).toBe('final_results'))
+})
+
+describe('drawable automatic rounds',()=>{
+  it.each([2,3,4])('treats Round %i next_round_ready as drawable after refresh/reopen',(round)=>{const state=resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:round,expected_player_count:2,last_completed_round:round-1,match_status:'active'},playerId:'a',participant:{player_id:'a',round_number:round,is_active:true},attempt:null,activePlayerCount:2,submittedCount:0});expect(state).toBe('next_round_ready');expect(isDrawableLifecycle(state)).toBe(true)})
 })

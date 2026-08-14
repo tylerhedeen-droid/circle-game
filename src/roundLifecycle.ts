@@ -31,6 +31,7 @@ export function reduceExpectedPlayers(state:AsyncRoundState,count:number){
 export function removeAsyncPlayer(state:AsyncRoundState,playerId:string){state.activePlayers.delete(playerId);state.submitted.delete(playerId);return completeAsyncRoundIfReady(state)}
 
 export type MultiplayerLifecycle='loading'|'draw'|'submitted_waiting_players'|'submitted_waiting_attempts'|'next_round_ready'|'results'|'final_results'|'closed'
+export const isDrawableLifecycle=(state:MultiplayerLifecycle)=>state==='draw'||state==='next_round_ready'
 export type MultiplayerResolutionInput={
   room:{id:string;room_code:string;status:'lobby'|'drawing'|'results'|'closed';current_round:number;expected_player_count:number;last_completed_round?:number;match_status?:'active'|'finished'}|null
   playerId:string|null

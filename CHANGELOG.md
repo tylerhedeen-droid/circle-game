@@ -2,6 +2,18 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.4.3] - 2026-08-14
+
+### Added
+
+- Prominent queued multiplayer activity banners with contextual Results and Draw actions.
+- Smart game reopening and locally persisted, player-scoped unseen round results.
+
+### Changed
+
+- Completed rounds now reveal automatically outside the drawing canvas, with a clear winner and next-round action.
+- Active Games visually prioritizes turns and unseen results while keeping waiting games quiet.
+
 ## [1.4.2] - 2026-08-14
 
 ### Added

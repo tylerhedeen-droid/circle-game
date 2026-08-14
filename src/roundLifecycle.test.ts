@@ -25,3 +25,15 @@ describe('authoritative resolver',()=>{
 describe('drawable automatic rounds',()=>{
   it.each([2,3,4])('treats Round %i next_round_ready as drawable after refresh/reopen',(round)=>{const state=resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:round,expected_player_count:2,last_completed_round:round-1,match_status:'active'},playerId:'a',participant:{player_id:'a',round_number:round,is_active:true},attempt:null,activePlayerCount:2,submittedCount:0});expect(state).toBe('next_round_ready');expect(isDrawableLifecycle(state)).toBe(true)})
 })
+
+describe('post-submit authoritative resolution',()=>{
+  it.each([1,2,3,4,5,8])('Round %i submission resolves to waiting when another attempt is outstanding',(round)=>{
+    expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:round,expected_player_count:2,last_completed_round:round-1,match_status:'active'},playerId:'a',participant:{player_id:'a',round_number:round,is_active:true},attempt:{player_id:'a',round_number:round},activePlayerCount:2,submittedCount:1})).toBe('submitted_waiting_attempts')
+  })
+  it.each([1,2,3,4,5,8])('Round %i final submission never remains loading while completion settles',(round)=>{
+    expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:round,expected_player_count:2,last_completed_round:round-1,match_status:'active'},playerId:'a',participant:{player_id:'a',round_number:round,is_active:true},attempt:{player_id:'a',round_number:round},activePlayerCount:2,submittedCount:2})).toBe('results')
+  })
+  it('uses the saved attempt as participation proof during a stale participant refresh',()=>{
+    expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:6,expected_player_count:2,last_completed_round:5,match_status:'active'},playerId:'a',participant:null,attempt:{player_id:'a',round_number:6},activePlayerCount:2,submittedCount:1})).toBe('submitted_waiting_attempts')
+  })
+})

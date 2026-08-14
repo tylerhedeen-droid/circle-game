@@ -47,8 +47,11 @@ export function resolveMultiplayerState({room,playerId,participant,attempt,activ
   if(room.match_status==='finished')return'final_results'
   if(room.status==='results')return'results'
   const eligible=participant?.player_id===playerId&&participant.round_number===room.current_round&&participant.is_active
-  if(!eligible)return'loading'
+  // Older/reconnecting clients can briefly miss the participant row while the
+  // room and attempt rows are already authoritative. A submitted attempt is
+  // sufficient proof that this player participated in the current round.
+  if(!eligible&&!(attempt?.player_id===playerId&&attempt.round_number===room.current_round))return'loading'
   const submitted=attempt?.player_id===playerId&&attempt.round_number===room.current_round
   if(!submitted)return room.last_completed_round===room.current_round-1&&room.current_round>1?'next_round_ready':'draw'
-  return activePlayerCount<room.expected_player_count?'submitted_waiting_players':submittedCount<activePlayerCount?'submitted_waiting_attempts':'loading'
+  return activePlayerCount<room.expected_player_count?'submitted_waiting_players':submittedCount<activePlayerCount?'submitted_waiting_attempts':'results'
 }

@@ -2,6 +2,15 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.4.4] - 2026-08-14
+
+### Fixed
+
+- Post-submit routing now immediately resolves authoritative waiting, round-result, next-round, and final-result states without trapping the drawing route behind a loading guard.
+- Loading reconciliation now retries automatically and exposes a recoverable Retry action.
+- Realtime banners render at the document root above mobile/PWA stacking contexts.
+- Active Games rows are compact, quiet, and viewport-safe at narrow mobile widths.
+
 ## [1.4.3] - 2026-08-14
 
 ### Added

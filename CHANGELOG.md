@@ -2,6 +2,18 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.4.1] - 2026-08-14
+
+### Added
+
+- Responsive completed-round comparison cards showing each stored circle, fitted-circle overlay, rank, player, rating, and score.
+
+### Fixed
+
+- Round 2 and later `next_round_ready` states are drawable instead of becoming stuck on the loading screen.
+- Realtime join, submission, round-complete, and next-round notices are deduplicated across refreshes and reconnects.
+- Results remain associated with `last_completed_round` when the next round opens automatically.
+
 ## [1.4.0] - 2026-08-13
 
 ### Added

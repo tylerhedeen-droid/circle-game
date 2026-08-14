@@ -18,3 +18,8 @@
 @keyframes notice-in{from{transform:translate(-50%,-18px);opacity:0}}
 .secondary-wide{width:100%;margin:12px 0;padding:12px;border:2px solid var(--ink);border-radius:5px;background:#fff;font-weight:700}
 .full-round{margin:24px 0}.full-round>h3{border-bottom:2px solid var(--ink);padding-bottom:8px}
+/* v1.4.3: activity should read like gameplay, not metadata. */
+.game-notice{align-items:flex-start;top:max(12px,env(safe-area-inset-top));width:min(calc(100% - 24px),480px);padding:16px 18px;background:var(--coral);border:3px solid var(--ink);box-shadow:6px 7px 0 var(--ink);text-align:left;font-size:1rem}
+.game-notice.round_ready{background:var(--lime)}.game-notice span{text-transform:none;font-size:.8rem}.game-notice button{align-self:stretch;margin-top:7px;padding:10px;border:2px solid var(--ink);border-radius:4px;background:var(--ink);color:#fff;font-weight:800}.game-notice small{align-self:flex-end}
+.active-game{border:2px solid transparent;border-top-color:#17171766;padding:10px 8px}.active-game.turn,.active-game.results{margin:5px 0;border:2px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink)}.active-game.turn{background:var(--lime)}.active-game.results{background:var(--coral)}.attention-label{width:max-content;margin:3px 0;padding:2px 5px;border:1px solid var(--ink);font-size:.62rem;letter-spacing:.08em}.active-game.waiting .attention-label{border:0;padding:0;color:#69665f}
+.room-results>h2{font-size:clamp(2rem,10vw,3.4rem);line-height:.95;text-transform:uppercase}

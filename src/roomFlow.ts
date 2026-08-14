@@ -15,4 +15,6 @@ export function roomAttention(room:Room,players:Player[],attempts:Attempt[],myId
   return{title:`Round ${round}${round>1?' ready':''}`,detail:'Your turn · Draw your circle when you’re ready',compact:`Round ${round} · Your turn`}
 }
 export function activeGameStatus(room:Room,players:Player[],attempts:Attempt[],myId:string,participants:RoundParticipant[]=[]){return roomAttention(room,players,attempts,myId,participants).compact}
+export function activeGameTone(room:Room,players:Player[],attempts:Attempt[],myId:string,participants:RoundParticipant[]=[]){const a=roomAttention(room,players,attempts,myId,participants);return /Results|Final/.test(a.compact)?'results':/Your turn/.test(a.compact)?'turn':'waiting'}
 export function homeNavigationPreservesRoom(){return true}
+export function resultPrimaryAction(round:number,currentRound:number,matchLength:number,isExtended:boolean){return round>=matchLength&&!isExtended?{kind:'full' as const,label:'View Full Match Results'}:{kind:'draw' as const,label:`Draw Round ${Math.max(round+1,currentRound)}`}}

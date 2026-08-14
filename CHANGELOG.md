@@ -2,6 +2,18 @@
 
 All notable changes to Circle are documented here. This project follows the general structure of [Keep a Changelog](https://keepachangelog.com/), with versions organized by release date.
 
+## [1.4.2] - 2026-08-14
+
+### Added
+
+- Queued, semantic in-app activity alerts and authoritative persistent room/Active Games attention states.
+- Persistent Full Match Results with overall statistics and stored circle comparisons for every completed round.
+
+### Fixed
+
+- Realtime notices now reconcile authoritative snapshots after events and reconnects without replaying old activity or announcing a player's own submission.
+- The displayed application version now matches the package release version.
+
 ## [1.4.1] - 2026-08-14
 
 ### Added

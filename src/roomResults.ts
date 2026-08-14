@@ -11,6 +11,8 @@ export function roundHistory(attempts:Attempt[],players:Player[],currentRound:nu
   return [...new Set(attempts.map(a=>a.round_number))].filter(n=>n<currentRound).sort((a,b)=>b-a).map(roundNumber=>({roundNumber,results:rankedRound(attempts,players,roundNumber)}))
 }
 export function mayRevealCurrent(room:Pick<Room,'status'|'reveal_mode'>){return room.status==='results'||room.reveal_mode==='immediate'}
+export function mayRevealRound(room:Pick<Room,'reveal_mode'|'last_completed_round'>,roundNumber:number){return room.reveal_mode==='immediate'||roundNumber<=room.last_completed_round}
+export function completedRoundResults(room:Pick<Room,'last_completed_round'>,attempts:Attempt[],players:Player[]){return room.last_completed_round>0?rankedRound(attempts,players,room.last_completed_round):[]}
 export function restoredRoomView(status:Room['status']){return status==='results'?'results':'game'}
 export function sessionRows(attempts:Attempt[],players:Player[]){
   const wins=new Map<string,number>()

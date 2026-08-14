@@ -18,7 +18,7 @@ A mobile-first party game: draw one freehand circle, get a believable roundness 
 ## Supabase setup
 
 1. Create a Supabase project.
-2. Open **SQL Editor** and run the migration files in numeric order: [`001_circle_game.sql`](supabase/migrations/001_circle_game.sql), [`002_multiplayer_reliability.sql`](supabase/migrations/002_multiplayer_reliability.sql), then [`003_match_completion.sql`](supabase/migrations/003_match_completion.sql). Existing projects only need migrations not already applied.
+2. Open **SQL Editor** and run the migration files in numeric order: `001`, `002`, `003`, then [`004_async_expected_players.sql`](supabase/migrations/004_async_expected_players.sql). Existing projects only need migrations not already applied. Migration 004 backfills legacy rooms to their active-player count (minimum 2), converts old lobbies into open Round 1 rooms, and retains in-progress/result rooms.
 3. In **Project Settings → API**, copy the Project URL and public anon/publishable key.
 4. Copy `.env.example` to `.env.local` and fill in:
 

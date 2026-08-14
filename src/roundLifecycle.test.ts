@@ -1,24 +1,26 @@
 import{describe,expect,it}from'vitest'
-import{completeIfReady,removeParticipant,resolveMultiplayerState,startRound,submitAttempt}from'./roundLifecycle'
-describe('multiplayer round lifecycle',()=>{
-  it('completes a 2-player round only after player B submits',()=>{const s=startRound(['a','b']);submitAttempt(s,'a');expect(s.status).toBe('drawing');submitAttempt(s,'b');expect(s.status).toBe('results')})
-  it('keeps 3 players waiting for the third submission',()=>{const s=startRound(['a','b','c']);submitAttempt(s,'a');submitAttempt(s,'b');expect(s.status).toBe('drawing');submitAttempt(s,'c');expect(s.status).toBe('results')})
-  it.each([['host','guest'],['guest','host']])('works when %s submits first',first=>{const s=startRound(['host','guest']);submitAttempt(s,first);submitAttempt(s,first==='host'?'guest':'host');expect(s.status).toBe('results')})
-  it('handles near-simultaneous final submissions idempotently',()=>{const s=startRound(['a','b']);submitAttempt(s,'a');submitAttempt(s,'b');completeIfReady(s);completeIfReady(s);expect(s.transitionCount).toBe(1)})
-  it('ignores duplicate submit/realtime events',()=>{const s=startRound(['a','b']);submitAttempt(s,'a');submitAttempt(s,'a');expect(s.submitted.size).toBe(1);submitAttempt(s,'b');expect(s.transitionCount).toBe(1)})
-  it('restores waiting after submission',()=>{const s=startRound(['a','b']);submitAttempt(s,'a');const restored={...s,participants:new Set(s.participants),submitted:new Set(s.submitted)};expect(restored.status).toBe('drawing');expect(restored.submitted.has('a')).toBe(true)})
-  it('restores results after transition',()=>{const s=startRound(['a']);submitAttempt(s,'a');expect(completeIfReady(s).status).toBe('results')})
-  it('inactive player removal allows completion',()=>{const s=startRound(['a','stale']);submitAttempt(s,'a');removeParticipant(s,'stale');expect(s.status).toBe('results')})
-  it('late joiners do not enter the current snapshot',()=>{const s=startRound(['a','b']);submitAttempt(s,'late');submitAttempt(s,'a');submitAttempt(s,'b');expect(s.status).toBe('results');expect(s.participants.has('late')).toBe(false)})
-  it('next round resets submissions and snapshots active players',()=>{const first=startRound(['a','b']);submitAttempt(first,'a');submitAttempt(first,'b');const next=startRound(['a','c']);expect(next.status).toBe('drawing');expect(next.submitted.size).toBe(0);expect([...next.participants]).toEqual(['a','c'])})
-  const resolve=(status:'lobby'|'drawing'|'results'|'closed',included:boolean,submitted:boolean,round=1)=>resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status,current_round:round},playerId:'a',participant:included?{player_id:'a',round_number:round,is_active:true}:null,attempt:submitted?{player_id:'a',round_number:round}:null})
-  it('rejoin after submitting restores waiting without allowing another draw',()=>expect(resolve('drawing',true,true)).toBe('submitted_waiting'))
-  it('rejoin during results restores the results screen',()=>expect(resolve('results',true,true)).toBe('results'))
-  it('an original unsubmitted participant rejoins the drawing screen',()=>expect(resolve('drawing',true,false)).toBe('draw'))
-  it('late joiner waits for next round',()=>expect(resolve('drawing',false,false)).toBe('waiting_next_round'))
-  it('closed room resolves ended',()=>expect(resolve('closed',true,true)).toBe('closed'))
-  it('a prior-round attempt never suppresses the new round drawing screen',()=>expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:2},playerId:'a',participant:{player_id:'a',round_number:2,is_active:true},attempt:{player_id:'a',round_number:1}})).toBe('draw'))
-  it.each(['navigate back','Game tab','refresh','Active Games','manual reopen'])('keeps a Round 1 submitter waiting after %s',()=>expect(resolve('drawing',true,true,1)).toBe('submitted_waiting'))
-  it('never renders draw from Results to Game navigation',()=>expect(resolve('results',true,true)).toBe('results'))
-  it('allows a fresh draw only after authoritative Round 2 snapshot',()=>expect(resolve('drawing',true,false,2)).toBe('draw'))
+import{isDrawableLifecycle,joinAsyncRound,openAsyncRound,reduceExpectedPlayers,removeAsyncPlayer,resolveMultiplayerState,submitAsyncAttempt}from'./roundLifecycle'
+
+describe('asynchronous expected-player lifecycle',()=>{
+  it('keeps a 2-player game open when host submits before friend joins',()=>{const s=openAsyncRound(2,['host']);submitAsyncAttempt(s,'host');expect(s.status).toBe('drawing');joinAsyncRound(s,'friend');expect(s.status).toBe('drawing');submitAsyncAttempt(s,'friend');expect(s.status).toBe('results')})
+  it('waits for 4/4 joined and 4/4 submitted',()=>{const s=openAsyncRound(4,['a']);submitAsyncAttempt(s,'a');for(const id of ['b','c']){joinAsyncRound(s,id);submitAsyncAttempt(s,id)}expect(s.status).toBe('drawing');joinAsyncRound(s,'d');expect(s.status).toBe('drawing');submitAsyncAttempt(s,'d');expect(s.status).toBe('results')})
+  it('does not finish when all currently joined submit but a slot remains',()=>{const s=openAsyncRound(4,['a','b']);submitAsyncAttempt(s,'a');submitAsyncAttempt(s,'b');expect(s.status).toBe('drawing')})
+  it('reducing 4 to 3 completes when all three already submitted',()=>{const s=openAsyncRound(4,['a','b','c']);for(const id of s.activePlayers)submitAsyncAttempt(s,id);reduceExpectedPlayers(s,3);expect(s.status).toBe('results')})
+  it('cannot reduce below active players',()=>expect(()=>reduceExpectedPlayers(openAsyncRound(4,['a','b','c']),2)).toThrow())
+  it('does not silently exceed capacity',()=>{const s=openAsyncRound(2,['a','b']);joinAsyncRound(s,'c');expect(s.activePlayers.has('c')).toBe(false)})
+  it('enforces one attempt per player per round',()=>{const s=openAsyncRound(2,['a','b']);submitAsyncAttempt(s,'a');submitAsyncAttempt(s,'a');expect(s.submitted.size).toBe(1);expect(s.transitionCount).toBe(0)})
+  it('removal frees a slot but does not reduce expected count',()=>{const s=openAsyncRound(3,['a','b','c']);submitAsyncAttempt(s,'a');submitAsyncAttempt(s,'b');removeAsyncPlayer(s,'c');expect(s.expectedPlayerCount).toBe(3);expect(s.status).toBe('drawing')})
+  it('opens an independent next round without altering history state',()=>{const first=openAsyncRound(2,['a','b']);submitAsyncAttempt(first,'a');submitAsyncAttempt(first,'b');const second=openAsyncRound(2,['a','b']);submitAsyncAttempt(second,'a');expect(first.status).toBe('results');expect(second.status).toBe('drawing')})
+})
+
+describe('authoritative resolver',()=>{
+ const resolve=(attempt:boolean,active=2,submitted=attempt?1:0,round=1,last=0)=>resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'drawing',current_round:round,expected_player_count:2,last_completed_round:last,match_status:'active'},playerId:'a',participant:{player_id:'a',round_number:round,is_active:true},attempt:attempt?{player_id:'a',round_number:round}:null,activePlayerCount:active,submittedCount:submitted})
+ it('restores a submitted host waiting for players',()=>expect(resolve(true,1,1)).toBe('submitted_waiting_players'))
+ it('restores a submitted player waiting for attempts',()=>expect(resolve(true,2,1)).toBe('submitted_waiting_attempts'))
+ it('restores refresh/PWA/shared-link state from rows',()=>expect(resolve(true,2,1)).toBe('submitted_waiting_attempts'))
+ it('announces an automatically prepared next round',()=>expect(resolve(false,2,0,2,1)).toBe('next_round_ready'))
+ it('allows the Round 2 drawing screen for next_round_ready',()=>expect(isDrawableLifecycle(resolve(false,2,0,2,1))).toBe(true))
+ it.each([2,3,4])('allows automatically prepared Round %s without a loading deadlock',round=>expect(isDrawableLifecycle(resolve(false,2,0,round,round-1))).toBe(true))
+ it('does not treat waiting or loading as drawable',()=>{expect(isDrawableLifecycle('submitted_waiting_attempts')).toBe(false);expect(isDrawableLifecycle('loading')).toBe(false)})
+ it('resolves final results authoritatively',()=>expect(resolveMultiplayerState({room:{id:'r',room_code:'ABCDE',status:'results',current_round:3,expected_player_count:2,match_status:'finished'},playerId:'a',participant:null,attempt:null,activePlayerCount:2,submittedCount:2})).toBe('final_results'))
 })
